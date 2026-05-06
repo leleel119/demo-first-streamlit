@@ -128,7 +128,7 @@
         }
 
         .cube-table {
-            border-collapse: collapse;
+            border-collapse: separate;
             border-spacing: 0;
         }
 
@@ -136,7 +136,16 @@
             width: 25px;
             height: 25px;
             padding: 0;
-            border: 1px solid #333;
+            border: 1px solid #222;
+        }
+
+        .cube-table td.gap,
+        .cube-table td.gap-col,
+        .cube-table td.gap-row {
+            width: 8px;
+            height: 8px;
+            border: none;
+            background: transparent;
         }
 
         .face-label {
@@ -256,18 +265,22 @@
         const FACE_F = 5;
 
         const COLORS = {
-            0: '#ffd700',
-            1: '#ff8c00',
-            2: '#3b82f6',
-            3: '#ffffff',
-            4: '#ff4444',
-            5: '#22c55e'
+            D: '#ffd700',
+            L: '#ff8c00',
+            B: '#3b82f6',
+            U: '#ffffff',
+            R: '#ff4444',
+            F: '#22c55e'
         };
+
+        const COLOR_KEYS = ['D', 'L', 'B', 'U', 'R', 'F'];
 
         const FACE_CN = { D: '下', L: '左', B: '後', U: '上', R: '右', F: '前' };
 
         function buildFlat2Posit() {
-            const flat2posit = new Array(12 * SIZE * SIZE);
+            const rows = 3 * SIZE;
+            const cols = 4 * SIZE;
+            const flat2posit = new Array(rows * cols);
             for (let i = 0; i < flat2posit.length; i++) flat2posit[i] = -1;
             
             for (let i = 0; i < SIZE; i++) {
@@ -280,16 +293,16 @@
                     flat2posit[4 * SIZE * (SIZE + i) + SIZE + j] = (5 * SIZE + i) * SIZE + j;
                 }
             }
-            return flat2posit;
+            return { flat2posit, rows, cols };
         }
 
-        const FLAT2POSIT = buildFlat2Posit();
+        const FLAT2POSIT_DATA = buildFlat2Posit();
 
         function createCube() {
             const posit = [];
             for (let i = 0; i < 6; i++) {
                 for (let j = 0; j < S2; j++) {
-                    posit.push(i);
+                    posit.push(COLOR_KEYS[i]);
                 }
             }
             return posit;
@@ -397,24 +410,28 @@
         }
 
         function renderCube(posit, container) {
-            const colorPerm = [0, 1, 2, 3, 4, 5];
-            const ori = 0;
+            const { flat2posit, rows, cols } = FLAT2POSIT_DATA;
             
             let html = '<table class="cube-table">';
-            let d = 0;
             
-            for (let row = 0; row < 3 * SIZE; row++) {
+            for (let row = 0; row < rows; row++) {
                 html += '<tr>';
-                for (let col = 0; col < 4 * SIZE; col++) {
-                    if (FLAT2POSIT[d] < 0) {
-                        html += '<td></td>';
+                for (let col = 0; col < cols; col++) {
+                    const d = row * cols + col;
+                    if (flat2posit[d] < 0) {
+                        html += '<td class="gap"></td>';
                     } else {
-                        const c = colorPerm[posit[FLAT2POSIT[d]]];
+                        const c = posit[flat2posit[d]];
                         html += '<td style="background-color:' + COLORS[c] + '"></td>';
                     }
-                    d++;
+                    if ((col + 1) % SIZE === 0 && col < cols - 1) {
+                        html += '<td class="gap-col"></td>';
+                    }
                 }
                 html += '</tr>';
+                if ((row + 1) % SIZE === 0 && row < rows - 1) {
+                    html += '<tr><td colspan="' + (cols * 2 - 1) + '" class="gap-row"></td></tr>';
+                }
             }
             html += '</table>';
             
@@ -454,7 +471,6 @@
                 html += `<span class="move move-${face}">${face}<span class="move-prime">${modifier}</span></span> `;
             }
             display.innerHTML = html;
-            moveCount.textContent = `總步數: ${scramble.length} 步`;
         }
 
         function applyScrambleAndRender(scramble) {
