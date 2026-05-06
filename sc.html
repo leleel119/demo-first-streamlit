@@ -1,0 +1,470 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>魔方打亂器</title>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Rajdhani:wght@400;500;600&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Rajdhani', sans-serif;
+            background: #1a1a2e;
+            color: #ffffff;
+            min-height: 100vh;
+            padding: 30px 20px;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+
+        h1 {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 2.5rem;
+            color: #00d9ff;
+            text-shadow: 0 0 20px rgba(0, 217, 255, 0.5);
+            letter-spacing: 3px;
+        }
+
+        .subtitle {
+            color: #b8b8b8;
+            margin-top: 10px;
+            font-size: 1.1rem;
+        }
+
+        .controls {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 30px;
+        }
+
+        .btn-generate {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 1.2rem;
+            padding: 18px 50px;
+            background: linear-gradient(135deg, #6c5ce7, #a855f7);
+            color: white;
+            border: none;
+            border-radius: 50px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 20px rgba(108, 92, 231, 0.4);
+        }
+
+        .btn-generate:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 6px 30px rgba(108, 92, 231, 0.6);
+        }
+
+        .btn-generate:active {
+            transform: translateY(0);
+        }
+
+        .card {
+            background: #16213e;
+            border-radius: 12px;
+            padding: 24px;
+            margin-bottom: 24px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+        }
+
+        .card-title {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 1rem;
+            color: #00d9ff;
+            margin-bottom: 16px;
+            letter-spacing: 2px;
+        }
+
+        .scramble-display {
+            font-family: 'Rajdhani', monospace;
+            font-size: 1.3rem;
+            line-height: 1.8;
+            letter-spacing: 1px;
+        }
+
+        .scramble-display .move {
+            display: inline-block;
+            padding: 2px 8px;
+            margin: 2px 4px;
+            border-radius: 4px;
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        .move-R { color: #ff6b6b; }
+        .move-L { color: #ffa500; }
+        .move-U { color: #ffffff; }
+        .move-D { color: #ffd700; }
+        .move-F { color: #4ade80; }
+        .move-B { color: #60a5fa; }
+        .move-prime { font-size: 0.9em; }
+
+        .move-count {
+            color: #b8b8b8;
+            font-size: 1rem;
+            margin-top: 12px;
+            text-align: right;
+        }
+
+        .cube-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+            background: #0d1321;
+            border-radius: 8px;
+        }
+
+        .cube-table {
+            border-collapse: collapse;
+            border-spacing: 0;
+        }
+
+        .cube-table td {
+            width: 25px;
+            height: 25px;
+            padding: 0;
+            border: 1px solid #333;
+        }
+
+        .face-label {
+            text-align: center;
+            font-size: 0.7rem;
+            color: #888;
+            margin-top: 8px;
+        }
+
+        .face-row {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .cube-grid {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 2px;
+        }
+
+        .cube-row {
+            display: flex;
+            gap: 2px;
+        }
+
+        .cube-cell {
+            width: 25px;
+            height: 25px;
+            border: 1px solid #333;
+        }
+
+        .legend {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 16px;
+            margin-top: 20px;
+            padding-top: 16px;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.9rem;
+            color: #b8b8b8;
+        }
+
+        .legend-color {
+            width: 20px;
+            height: 20px;
+            border-radius: 4px;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+        }
+
+        .color-W { background: #ffffff; }
+        .color-Y { background: #ffd700; }
+        .color-R { background: #ff4444; }
+        .color-O { background: #ff8c00; }
+        .color-G { background: #22c55e; }
+        .color-B { background: #3b82f6; }
+
+        @media (max-width: 600px) {
+            h1 { font-size: 1.8rem; }
+            .cube-cell { width: 20px; height: 20px; }
+            .scramble-display { font-size: 1.1rem; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>魔方打亂器</h1>
+            <p class="subtitle">標準配色：白上 / 綠前 / 紅右 / 橙左 / 藍後 / 黃下</p>
+        </header>
+
+        <div class="controls">
+            <button class="btn-generate" onclick="generateScramble()">產生打亂</button>
+        </div>
+
+        <div class="card">
+            <div class="card-title">打亂序列</div>
+            <div class="scramble-display" id="scramble-display">
+                <span style="color: #b8b8b8;">點擊上方按鈕產生打亂...</span>
+            </div>
+            <div class="move-count" id="move-count"></div>
+        </div>
+
+        <div class="card">
+            <div class="card-title">魔方展開圖</div>
+            <div class="cube-container">
+                <div id="cube-display"></div>
+            </div>
+            <div class="legend">
+                <div class="legend-item"><div class="legend-color color-W"></div>白 (上)</div>
+                <div class="legend-item"><div class="legend-color color-Y"></div>黃 (下)</div>
+                <div class="legend-item"><div class="legend-color color-R"></div>紅 (右)</div>
+                <div class="legend-item"><div class="legend-color color-O"></div>橙 (左)</div>
+                <div class="legend-item"><div class="legend-color color-G"></div>綠 (前)</div>
+                <div class="legend-item"><div class="legend-color color-B"></div>藍 (後)</div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const SIZE = 3;
+        const S2 = SIZE * SIZE;
+        
+        const FACE_D = 0;
+        const FACE_L = 1;
+        const FACE_B = 2;
+        const FACE_U = 3;
+        const FACE_R = 4;
+        const FACE_F = 5;
+
+        const COLORS = {
+            0: '#ffd700',
+            1: '#ff8c00',
+            2: '#3b82f6',
+            3: '#ffffff',
+            4: '#ff4444',
+            5: '#22c55e'
+        };
+
+        const FACE_CN = { D: '下', L: '左', B: '後', U: '上', R: '右', F: '前' };
+
+        function buildFlat2Posit() {
+            const flat2posit = new Array(12 * SIZE * SIZE);
+            for (let i = 0; i < flat2posit.length; i++) flat2posit[i] = -1;
+            
+            for (let i = 0; i < SIZE; i++) {
+                for (let j = 0; j < SIZE; j++) {
+                    flat2posit[4 * SIZE * (3 * SIZE - i - 1) + SIZE + j] = i * SIZE + j;
+                    flat2posit[4 * SIZE * (SIZE + i) + SIZE - j - 1] = (SIZE + i) * SIZE + j;
+                    flat2posit[4 * SIZE * (SIZE + i) + 4 * SIZE - j - 1] = (2 * SIZE + i) * SIZE + j;
+                    flat2posit[4 * SIZE * i + SIZE + j] = (3 * SIZE + i) * SIZE + j;
+                    flat2posit[4 * SIZE * (SIZE + i) + 2 * SIZE + j] = (4 * SIZE + i) * SIZE + j;
+                    flat2posit[4 * SIZE * (SIZE + i) + SIZE + j] = (5 * SIZE + i) * SIZE + j;
+                }
+            }
+            return flat2posit;
+        }
+
+        const FLAT2POSIT = buildFlat2Posit();
+
+        function createCube() {
+            const posit = [];
+            for (let i = 0; i < 6; i++) {
+                for (let j = 0; j < S2; j++) {
+                    posit.push(i);
+                }
+            }
+            return posit;
+        }
+
+        function doSlice(posit, f, d, q) {
+            const s = SIZE;
+            const s2 = s * s;
+            let f1, f2, f3, f4;
+
+            for (let k = 0; k < q; k++) {
+                for (let i = 0; i < s; i++) {
+                    if (f === 0) {
+                        f1 = 6 * s2 - s * d - s + i;
+                        f2 = 2 * s2 - s * d - 1 - i;
+                        f3 = 3 * s2 - s * d - 1 - i;
+                        f4 = 5 * s2 - s * d - s + i;
+                    } else if (f === 1) {
+                        f1 = 3 * s2 + d + s * i;
+                        f2 = 3 * s2 + d - s * (i + 1);
+                        f3 = s2 + d - s * (i + 1);
+                        f4 = 5 * s2 + d + s * i;
+                    } else if (f === 2) {
+                        f1 = 3 * s2 + d * s + i;
+                        f2 = 4 * s2 + s - 1 - d + s * i;
+                        f3 = d * s + s - 1 - i;
+                        f4 = 2 * s2 - 1 - d - s * i;
+                    } else if (f === 3) {
+                        f1 = 4 * s2 + d * s + s - 1 - i;
+                        f2 = 2 * s2 + d * s + i;
+                        f3 = s2 + d * s + i;
+                        f4 = 5 * s2 + d * s + s - 1 - i;
+                    } else if (f === 4) {
+                        f1 = 6 * s2 - 1 - d - s * i;
+                        f2 = s - 1 - d + s * i;
+                        f3 = 2 * s2 + s - 1 - d + s * i;
+                        f4 = 4 * s2 - 1 - d - s * i;
+                    } else if (f === 5) {
+                        f1 = 4 * s2 - s - d * s + i;
+                        f2 = 2 * s2 - s + d - s * i;
+                        f3 = s2 - 1 - d * s - i;
+                        f4 = 4 * s2 + d + s * i;
+                    }
+
+                    const c = posit[f1];
+                    posit[f1] = posit[f2];
+                    posit[f2] = posit[f3];
+                    posit[f3] = posit[f4];
+                    posit[f4] = c;
+                }
+
+                if (d === 0) {
+                    for (let i = 0; i + i < s; i++) {
+                        for (let j = 0; j + j < s - 1; j++) {
+                            f1 = f * s2 + i + j * s;
+                            f3 = f * s2 + (s - 1 - i) + (s - 1 - j) * s;
+
+                            if (f < 3) {
+                                f2 = f * s2 + (s - 1 - j) + i * s;
+                                f4 = f * s2 + j + (s - 1 - i) * s;
+                            } else {
+                                f4 = f * s2 + (s - 1 - j) + i * s;
+                                f2 = f * s2 + j + (s - 1 - i) * s;
+                            }
+
+                            const c = posit[f1];
+                            posit[f1] = posit[f2];
+                            posit[f2] = posit[f3];
+                            posit[f3] = posit[f4];
+                            posit[f4] = c;
+                        }
+                    }
+                }
+            }
+            return posit;
+        }
+
+        function doMove(posit, move) {
+            let f = move.face;
+            let d = move.layer;
+            let q = move.q;
+            
+            if (f > 5) f -= 6;
+            doSlice(posit, f, d, q);
+            return posit;
+        }
+
+        function parseMoveStr(moveStr) {
+            const faceMap = { 'D': FACE_D, 'L': FACE_L, 'B': FACE_B, 'U': FACE_U, 'R': FACE_R, 'F': FACE_F };
+            const face = faceMap[moveStr[0]];
+            let q = 1;
+            if (moveStr.length === 2) {
+                if (moveStr[1] === "'") q = 3;
+                else if (moveStr[1] === '2') q = 2;
+            }
+            return { face, layer: 0, q };
+        }
+
+        function applyScramble(posit, scramble) {
+            for (let moveStr of scramble) {
+                const move = parseMoveStr(moveStr);
+                doMove(posit, move);
+            }
+            return posit;
+        }
+
+        function renderCube(posit, container) {
+            const colorPerm = [0, 1, 2, 3, 4, 5];
+            const ori = 0;
+            
+            let html = '<table class="cube-table">';
+            let d = 0;
+            
+            for (let row = 0; row < 3 * SIZE; row++) {
+                html += '<tr>';
+                for (let col = 0; col < 4 * SIZE; col++) {
+                    if (FLAT2POSIT[d] < 0) {
+                        html += '<td></td>';
+                    } else {
+                        const c = colorPerm[posit[FLAT2POSIT[d]]];
+                        html += '<td style="background-color:' + COLORS[c] + '"></td>';
+                    }
+                    d++;
+                }
+                html += '</tr>';
+            }
+            html += '</table>';
+            
+            container.innerHTML = html;
+        }
+
+        const MOVES = ['R', 'L', 'U', 'D', 'F', 'B'];
+        const MODIFIERS = ['', "'", '2'];
+
+        function generateScramble() {
+            const scramble = [];
+            let lastFace = '';
+
+            for (let i = 0; i < 20; i++) {
+                let face;
+                do {
+                    face = MOVES[Math.floor(Math.random() * MOVES.length)];
+                } while (face === lastFace);
+
+                const modifier = MODIFIERS[Math.floor(Math.random() * MODIFIERS.length)];
+                scramble.push(face + modifier);
+                lastFace = face;
+            }
+
+            displayScramble(scramble);
+            applyScrambleAndRender(scramble);
+        }
+
+        function displayScramble(scramble) {
+            const display = document.getElementById('scramble-display');
+            const moveCount = document.getElementById('move-count');
+
+            let html = '';
+            for (let move of scramble) {
+                const face = move[0];
+                const modifier = move.slice(1);
+                html += `<span class="move move-${face}">${face}<span class="move-prime">${modifier}</span></span> `;
+            }
+            display.innerHTML = html;
+            moveCount.textContent = `總步數: ${scramble.length} 步`;
+        }
+
+        function applyScrambleAndRender(scramble) {
+            const posit = createCube();
+            applyScramble(posit, scramble);
+            const container = document.getElementById('cube-display');
+            renderCube(posit, container);
+        }
+
+        generateScramble();
+    </script>
+</body>
+</html>
